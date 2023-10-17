@@ -46,7 +46,7 @@ Dark Console is a powerful Python script designed to automate the analysis of UR
 </ul>
 
 <br>
-###  Author <br>
+### Author <br>
 Dark_Console script by: Dark_Shadow04<br>
 GitHub: DarkShadow04<br>
 <br>
