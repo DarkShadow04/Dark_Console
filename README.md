@@ -9,6 +9,19 @@ Dark Console is a powerful Python script designed to automate the analysis of UR
 ### Clone the Repository
 <pre><code>git clone https://github.com/DarkShadow04/dark-console.git</code></pre>
 
+### Dependencies
+
+#### Python-requirements
+<pre><code>sudo apt update</code></pre>
+<pre><code>sudo apt install python3-pip</code></pre>
+<pre><code>sudo pip install requests</code></pre>
+<pre><code>sudo pip install reportlab</code></pre>
+
+#### lolcat-requirement(beautify text)
+<pre><code>sudo apt-get install gem</code></pre>
+<pre><code>sudo apt install ruby-rubygems</code></pre>
+<pre><code>sudo gem install lolcat</code></pre>
+
 ## Usage
 ### Running the Script
 
