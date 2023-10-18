@@ -4,10 +4,11 @@ import sys
 import os
 import requests
 import argparse
+import time
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 
-VIRUSTOTAL_API_KEY = "18ad48320f7be2b7a9297fd3e39e5ae3bde85bf9f29abc0f74a11de1cb9aa74f"
+VIRUSTOTAL_API_KEY = "18ad48320f7be2b7a9297fd3e39e5ae3bde85bf9f29abc0f74a11de1cb9aa74f"  # Replace with your VirusTotal API key
 
 def install(package):
     subprocess.check_call([sys.executable, "-m", "pip", "install", package], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -58,27 +59,39 @@ print(f"{random_color} Copyright 2023 Dark_Shadow04 {reset}\n")
 def create_pdf_report(results, input_type):
     pdf_path = "VirusTotal_Report.pdf"
     banner = "Report"
-    os.system(f'echo "{banner}" | lolcat')
     c = canvas.Canvas(pdf_path, pagesize=letter)
-    c.setFont("Helvetica-Bold", 16)
-    c.drawString(220, 750, "Report")
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(30, 700, "Targets List:")
 
-    y_position = 680
+    page_height = 750
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(220, page_height, "Report")
+
+    y_position = page_height - 50
+    counter = 1
     for target, details in results.items():
-        c.drawString(30, y_position, f"Target: {target}")
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(30, y_position, f"{counter}. Target: {target}")
         y_position -= 20
-        for category, count in details.items():
-            c.drawString(50, y_position, f"{category}: {str(count)}")
-            y_position -= 20
-        y_position -= 20  # Add extra space between results
+        if isinstance(details, str):
+            c.drawString(50, y_position, f"Result: {details}")
+        else:
+            for category, count in details.items():
+                c.drawString(50, y_position, f"{category}: {str(count)}")
+                y_position -= 20
+                if y_position < 50:
+                    c.showPage()
+                    page_height = 750
+                    y_position = page_height
+
+        counter += 1
+        y_position -= 40  # Add extra space between results
 
     c.save()
     print(f"Report generated successfully at {pdf_path}")
 
-def analyze_item(item):
+def analyze_item(item, index, total_items):
     try:
+        print(f"Scanning item {index}/{total_items}: {item} - Next scan in 15 seconds. Estimated time remaining for all items: {15 * (total_items - index)} seconds.")
+        time.sleep(15)  # Adding an extra 15-second delay for every 4 scans
         url = f"https://www.virustotal.com/vtapi/v2/url/report?apikey={VIRUSTOTAL_API_KEY}&resource={item}"
         response = requests.get(url)
         json_response = response.json()
@@ -109,7 +122,7 @@ def analyze_item(item):
                 categories['unrated'] += 1
         return categories
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"An error occurred for item {item}: {e}")
         return {
             'malicious': 0,
             'phishing': 0,
@@ -125,7 +138,7 @@ def main():
 
         banner = "Warning: Request rate: 4 lookups/minute. Daily quota: 500 lookups/day. Monthly quota: 15.5K lookups/month."
         os.system(f'echo "{banner}" | lolcat')
-
+        
         parser = argparse.ArgumentParser(description='VirusTotal Analysis Script')
         parser.add_argument('input_type', type=str, help='Specify the input type: URL, IP address, or file')
         args = parser.parse_args()
@@ -135,27 +148,38 @@ def main():
             file_path = input("Enter the location of the file containing URLs or IP addresses: ")
             with open(file_path, 'r') as f:
                 items = f.read().splitlines()
+            
+            results = {}
+            for idx, item in enumerate(items, start=1):
+                results[item] = analyze_item(item, idx, len(items))
+                
+            print("\nScan results:")
+            for item, result in results.items():
+                print(f"Item: {item} - Result: {result}")
+            
+            save_pdf = input("Do you want to save the results to a PDF file? (yes/no): ").lower()
+            if save_pdf == 'yes':
+                create_pdf_report(results, args.input_type)
+            else:
+                print("Results not saved as PDF.")
+
         else:
             item = input(f"Enter the {args.input_type}: ")
-            items.append(item)
+            results = analyze_item(item, 1, 1)
+            print(f"\nScan result for {item}: {results}")
+            save_pdf = input("Do you want to save the result to a PDF file? (yes/no): ").lower()
+            if save_pdf == 'yes':
+                create_pdf_report({item: results}, args.input_type)
+            else:
+                print("Result not saved as PDF.")
 
-        results = {}
-        for item in items:
-            if item not in results:
-                results[item] = {'Malicious': 0, 'Phishing': 0, 'Suspicious': 0, 'Clean': 0, 'Unrated': 0}
-            result = analyze_item(item)
-            results[item] = result
-
-        create_pdf_report(results, args.input_type)
-
-        print("")
         banner = "Exiting from 'Dark_Shadow04' private database console."
         os.system(f'echo "{banner}" | lolcat')
     except KeyboardInterrupt:
         banner = "Exiting from 'Dark_Shadow04' Private Database Console"
         os.system(f'echo "{banner}" | lolcat')
 
-print(f"{random_color} Script executed successfully with blessing of Dark_Shadow04. {reset}\n")       
+# Rest of the script remains the same
 
 if __name__ == "__main__":
     main()
