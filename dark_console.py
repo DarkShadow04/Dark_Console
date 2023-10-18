@@ -72,6 +72,7 @@ def create_pdf_report(results, input_type):
         for category, count in details.items():
             c.drawString(50, y_position, f"{category}: {str(count)}")
             y_position -= 20
+        y_position -= 20  # Add extra space between results
 
     c.save()
     print(f"Report generated successfully at {pdf_path}")
@@ -84,23 +85,39 @@ def analyze_item(item):
         if json_response['response_code'] == 0:
             return "Unrated"
         scans = json_response.get('scans', {})
-        categories = {'Malicious': 0, 'Phishing': 0, 'Suspicious': 0, 'Clean': 0, 'Unrated': 0}
+        categories = {
+            'malicious': 0,
+            'phishing': 0,
+            'suspicious': 0,
+            'clean site': 0,
+            'not recommended': 0,
+            'unrated': 0
+        }
         for scan in scans.values():
-            result = scan.get('result', '')
-            if 'malicious' in result.lower():
-                categories['Malicious'] += 1
-            elif 'phish' in result.lower():
-                categories['Phishing'] += 1
-            elif 'suspicious' in result.lower():
-                categories['Suspicious'] += 1
-            elif 'clean' in result.lower():
-                categories['Clean'] += 1
+            result = scan.get('result', '').lower()
+            if 'malicious' in result or 'malware' in result:
+                categories['malicious'] += 1
+            elif 'phish' in result:
+                categories['phishing'] += 1
+            elif 'suspicious' in result:
+                categories['suspicious'] += 1
+            elif 'clean' in result:
+                categories['clean site'] += 1
+            elif 'not recommended' in result:
+                categories['not recommended'] += 1
             else:
-                categories['Unrated'] += 1
+                categories['unrated'] += 1
         return categories
     except Exception as e:
         print(f"An error occurred: {e}")
-        return {'Malicious': 0, 'Phishing': 0, 'Suspicious': 0, 'Clean': 0, 'Unrated': 0}
+        return {
+            'malicious': 0,
+            'phishing': 0,
+            'suspicious': 0,
+            'clean site': 0,
+            'not recommended': 0,
+            'unrated': 0
+        }
 
 def main():
     try:
